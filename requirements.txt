@@ -1,0 +1,10 @@
+aio-pika
+asyncpg
+fastapi
+psycopg2-binary
+sqlalchemy
+python-dotenv
+uvicorn[standard]
+pytest
+pytest-asyncio
+httpx
