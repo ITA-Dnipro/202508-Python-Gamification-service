@@ -33,7 +33,7 @@ class ExpTransaction(BaseModel):
     user_id: int
     action_id: int
     exp_awarded: int
-    reference_id: Optional[str] = None
+    reference: Optional[str] = None
     created_at: Optional[datetime] = None
 
     class Config:
