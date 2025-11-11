@@ -1,6 +1,6 @@
 from fastapi import FastAPI
+from sqlalchemy.exc import IntegrityError
 from .database import engine, Base, SessionLocal
-from .routers import gamification
 from .config.default_actions import DEFAULT_EXP_ACTIONS
 from . import models
 import logging
@@ -16,12 +16,13 @@ app = FastAPI(
 
 
 @app.on_event("startup")
-async def create_default_exp_actions():
+def create_default_exp_actions():
     """
     Create default ExpAction records on application startup.
     """
     db = SessionLocal()
     try:
+        created_count = 0
         for action_data in DEFAULT_EXP_ACTIONS:
             existing_action = db.query(models.ExpAction).filter(
                 models.ExpAction.name == action_data["name"],
@@ -31,18 +32,19 @@ async def create_default_exp_actions():
             if not existing_action:
                 new_action = models.ExpAction(**action_data)
                 db.add(new_action)
+                created_count += 1
                 logger.info(f"Created default action: {action_data['name']} (role={action_data.get('role')})")
 
         db.commit()
-        logger.info("Default ExpActions initialized successfully")
+        logger.info(f"Default ExpActions initialized. Created {created_count} new actions.")
+    except IntegrityError as e:
+        db.rollback()
+        raise e
     except Exception as e:
         logger.error(f"Error creating default ExpActions: {e}")
         db.rollback()
     finally:
         db.close()
-
-
-app.include_router(gamification.router)
 
 
 @app.get("/")

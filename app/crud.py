@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from . import models, schemas
 from sqlalchemy import update
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_exp_action_by_id(db: Session, action_id: int) -> Optional[models.ExpAction]:
@@ -12,7 +15,7 @@ def create_exp_transaction(db: Session, transaction: schemas.ExpTransaction) -> 
     tx_data = transaction.dict()
     db_transaction = models.ExpTransaction(**tx_data)
     db.add(db_transaction)
-    db.commit()
+    db.flush()
     db.refresh(db_transaction)
     return db_transaction
 
@@ -27,7 +30,7 @@ def get_existing_transaction(db: Session, user_experience_id: int, action_id: in
 def create_user_experience(db: Session, user_id: int, role: Optional[str]):
     user_exp = models.UserExperience(user_id=user_id, role=role, total_exp=0)
     db.add(user_exp)
-    db.commit()
+    db.flush()
     db.refresh(user_exp)
     return user_exp
 
@@ -47,9 +50,11 @@ def update_total_exp(db: Session, user_id: int, exp_value: int, role: Optional[s
         .values(total_exp=models.UserExperience.total_exp + exp_value)
     )
     result = db.execute(stmt)
-    db.commit()
+    db.flush()
 
     if result.rowcount == 0:
         return None
+    else:
+        logger.info(f"User {user_id} gained {exp_value} exp (role={role})")
 
     return get_user_experience(db, user_id, role)

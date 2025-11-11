@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Text, UniqueConstraint, DateTime, func
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Text, UniqueConstraint, CheckConstraint, DateTime, func
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -14,6 +14,7 @@ class ExpAction(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     __table_args__ = (
         UniqueConstraint("name", "role", name="uq_expaction_name_role"),
+        CheckConstraint("exp_value >= 0", name="chk_expaction_expvalue_nonnegative"),
     )
 
 
