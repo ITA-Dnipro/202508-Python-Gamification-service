@@ -9,11 +9,10 @@ from sqlalchemy.pool import StaticPool
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
-repo_root = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(repo_root))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from services.Gamification.app.database import Base
-from services.Gamification.app import models
+from app.database import Base
+from app import models
 
 TEST_ENGINE = create_engine(
     "sqlite:///:memory:",
@@ -23,12 +22,12 @@ TEST_ENGINE = create_engine(
 Base.metadata.create_all(bind=TEST_ENGINE)
 TEST_SESSION_MAKER = sessionmaker(autocommit=False, autoflush=False, bind=TEST_ENGINE)
 
-import services.Gamification.app.database as db_module
+import app.database as db_module
 db_module.engine = TEST_ENGINE
 db_module.SessionLocal = TEST_SESSION_MAKER
 
-from services.Gamification.app.main import app
-from services.Gamification.app.routers.gamification import get_db
+from app.main import app
+from app.routers.gamification import get_db
 
 
 @pytest.fixture(scope="function")
