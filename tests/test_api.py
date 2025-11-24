@@ -2,12 +2,14 @@ import sys
 import os
 from pathlib import Path
 import pytest
+import jwt
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["SECRET_KEY"] = "test_secret"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -77,14 +79,20 @@ def client(test_db):
     app.dependency_overrides.clear()
 
 
+def create_test_token(user_id, role):
+    return jwt.encode({"user_id": user_id, "role": role}, "test_secret", algorithm="HS256")
+
+
 def test_successful_exp_award(client, test_db):
     """Test successful EXP award to a startup user."""
+    token = create_test_token(1, "startup")
     response = client.post(
         "/api/gamification/startup/1/award-exp",
         json={
             "action_name": "test_action",
             "reference_id": 101
-        }
+        },
+        headers={"Authorization": f"Bearer {token}"}
     )
     
     assert response.status_code == 200
@@ -96,12 +104,14 @@ def test_successful_exp_award(client, test_db):
 
 def test_duplicate_prevention(client, test_db):
     """Test that duplicate EXP awards are prevented."""
+    token = create_test_token(2, "startup")
     response1 = client.post(
         "/api/gamification/startup/2/award-exp",
         json={
             "action_name": "test_action",
             "reference_id": 102
-        }
+        },
+        headers={"Authorization": f"Bearer {token}"}
     )
     assert response1.status_code == 200
     
@@ -110,19 +120,22 @@ def test_duplicate_prevention(client, test_db):
         json={
             "action_name": "test_action",
             "reference_id": 102
-        }
+        },
+        headers={"Authorization": f"Bearer {token}"}
     )
     assert response2.status_code in [400, 500]
 
 
 def test_fetch_user_exp_total(client, test_db):
     """Test fetching user's total EXP."""
+    token = create_test_token(3, "startup")
     client.post(
         "/api/gamification/startup/3/award-exp",
         json={
             "action_name": "test_action",
             "reference_id": 103
-        }
+        },
+        headers={"Authorization": f"Bearer {token}"}
     )
 
     response = client.get("/api/gamification/startup/3/experience")

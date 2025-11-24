@@ -35,7 +35,7 @@ def test_award_exp_correctly(role):
         user_id=1,
         action_id=action.id,
         exp_awarded=action.exp_value,
-        reference=f"ref-award-1-{role}",
+        reference=1001,
     )
 
     crud.create_exp_transaction(db, tx)
@@ -66,7 +66,7 @@ def test_prevent_duplicate_transaction_for_same_reference(role):
         user_id=2,
         action_id=action.id,
         exp_awarded=action.exp_value,
-        reference=f"ref-dup-1-{role}",
+        reference=2002,
     )
 
     crud.create_exp_transaction(db, tx)
@@ -78,7 +78,7 @@ def test_prevent_duplicate_transaction_for_same_reference(role):
         user_id=2,
         action_id=action.id,
         exp_awarded=action.exp_value,
-        reference=f"ref-dup-1-{role}",
+        reference=2002,
     )
 
     db_dup = SessionLocal()
