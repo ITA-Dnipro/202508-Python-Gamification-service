@@ -9,7 +9,7 @@ def award_experience_by_name(
         db: Session,
         user_id: int,
         action_name: str,
-        reference_id: str,
+        reference_id: Optional[int] = None,
         user_role: Optional[str] = None,
         request: Optional[Request] = None,
 ):
@@ -46,11 +46,11 @@ def award_experience_by_name(
             reference_id=reference_id,
         )
         crud.create_exp_transaction(db, transaction)
+        db_user_exp = crud.update_total_exp(db, user_id, db_action.exp_value, user_role)
+        db.commit()
     except IntegrityError:
         db.rollback()
         raise ValueError("Experience already awarded for this action and reference")
-
-    db_user_exp = crud.update_total_exp(db, user_id, db_action.exp_value, user_role)
 
     if not db_user_exp:
         raise ValueError("Failed to update user experience")

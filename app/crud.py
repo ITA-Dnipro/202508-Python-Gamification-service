@@ -16,7 +16,7 @@ def get_exp_action_by_name(db: Session, action_name: str, role: str) -> Optional
     if not action:
         action = db.query(models.ExpAction).filter(
             models.ExpAction.name == action_name,
-            models.ExpAction.role == None
+            models.ExpAction.role.is_(None)
         ).first()
     
     return action

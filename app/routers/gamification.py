@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Request, Body
+from fastapi import APIRouter, Depends, Request, Body, HTTPException
 from sqlalchemy.orm import Session
 from ..database import SessionLocal
 from .. import schemas, crud
 from ..services import exp_manager
 from typing import Optional
+from ..auth import get_current_user_role, get_current_user_id
 
 router = APIRouter(prefix="/api/gamification", tags=["gamification"])
 
@@ -22,7 +23,14 @@ def award_experience_startup(
         action_name: str = Body(..., embed=True),
         reference_id: Optional[int] = Body(None, embed=True),
         db: Session = Depends(get_db),
-):
+):  
+    user_id = get_current_user_id(token=request.headers.get("Authorization").split(" ")[1])
+    if user_id != startup_id:
+        raise HTTPException(status_code=403, detail="Operation not permitted for this user")
+    role = get_current_user_role(token=request.headers.get("Authorization").split(" ")[1])
+    if role != "startup":
+        raise HTTPException(status_code=403, detail="Operation not permitted for this user role")
+    
     award = exp_manager.award_experience_by_name(
         db=db,
         user_id=startup_id,
@@ -43,6 +51,13 @@ def award_experience_investor(
         reference_id: Optional[int] = Body(None, embed=True),
         db: Session = Depends(get_db),
 ):
+    user_id = get_current_user_id(token=request.headers.get("Authorization").split(" ")[1])
+    if user_id != investor_id:
+        raise HTTPException(status_code=403, detail="Operation not permitted for this user")
+    role = get_current_user_role(token=request.headers.get("Authorization").split(" ")[1])
+    if role != "investor":
+        raise HTTPException(status_code=403, detail="Operation not permitted for this user role")
+    
     award = exp_manager.award_experience_by_name(
         db=db,
         user_id=investor_id,
