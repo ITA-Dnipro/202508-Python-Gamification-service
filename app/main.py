@@ -4,6 +4,7 @@ from prometheus_client import make_asgi_app
 from .database import engine, Base, SessionLocal
 from .config.default_actions import DEFAULT_EXP_ACTIONS
 from . import models
+from .routers import gamification
 import logging
 import threading
 import pika
@@ -20,6 +21,8 @@ app = FastAPI(
 
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
+
+app.include_router(gamification.router)
 
 @app.on_event("startup")
 def create_default_exp_actions():

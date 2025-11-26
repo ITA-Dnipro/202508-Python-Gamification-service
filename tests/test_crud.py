@@ -6,11 +6,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 
-repo_root = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(repo_root))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
-from services.Gamification.app import crud, models, schemas
+from app import crud, models, schemas
 
 
 def setup_in_memory_db():
@@ -36,7 +35,7 @@ def test_award_exp_correctly(role):
         user_id=1,
         action_id=action.id,
         exp_awarded=action.exp_value,
-        reference=f"ref-award-1-{role}",
+        reference=1001,
     )
 
     crud.create_exp_transaction(db, tx)
@@ -67,18 +66,19 @@ def test_prevent_duplicate_transaction_for_same_reference(role):
         user_id=2,
         action_id=action.id,
         exp_awarded=action.exp_value,
-        reference=f"ref-dup-1-{role}",
+        reference=2002,
     )
 
     crud.create_exp_transaction(db, tx)
     crud.update_total_exp(db, user_id=2, exp_value=action.exp_value, role=role)
+    db.commit()
     
     dup = schemas.ExpTransaction(
         user_experience_id=user_exp.id,
         user_id=2,
         action_id=action.id,
         exp_awarded=action.exp_value,
-        reference=f"ref-dup-1-{role}",
+        reference=2002,
     )
 
     db_dup = SessionLocal()
@@ -92,13 +92,10 @@ def test_prevent_duplicate_transaction_for_same_reference(role):
             pass
         db_dup.close()
 
-    try:
-        db.rollback()
-    except Exception:
-        pass
     db.close()
 
     db2 = SessionLocal()
     ue = crud.get_user_experience(db2, user_id=2, role=role)
+    assert ue is not None
     assert ue.total_exp == awarded
     db2.close()

@@ -7,8 +7,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_exp_action_by_id(db: Session, action_id: int) -> Optional[models.ExpAction]:
-    return db.query(models.ExpAction).filter(models.ExpAction.id == action_id).first()
+def get_exp_action_by_name(db: Session, action_name: str, role: str) -> Optional[models.ExpAction]:
+    action = db.query(models.ExpAction).filter(
+        models.ExpAction.name == action_name, 
+        models.ExpAction.role == role
+    ).first()
+    
+    if not action:
+        action = db.query(models.ExpAction).filter(
+            models.ExpAction.name == action_name,
+            models.ExpAction.role.is_(None)
+        ).first()
+    
+    return action
 
 
 def create_exp_transaction(db: Session, transaction: schemas.ExpTransaction) -> models.ExpTransaction:
