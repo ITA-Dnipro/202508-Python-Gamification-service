@@ -38,7 +38,7 @@ class ExpTransaction(Base):
     action_id = Column(Integer, ForeignKey("exp_action.id", ondelete="RESTRICT"))
     exp_awarded = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    reference = Column(String(100), nullable=True)
+    reference = Column(Integer, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("user_experience_id", "action_id", "reference", name="uq_userexp_action_ref"),

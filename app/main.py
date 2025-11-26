@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from .database import engine, Base, SessionLocal
 from .config.default_actions import DEFAULT_EXP_ACTIONS
 from . import models
+from .routers import gamification
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+app.include_router(gamification.router)
 
 @app.on_event("startup")
 def create_default_exp_actions():
